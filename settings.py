@@ -45,9 +45,17 @@ class MLflowSettings(BaseSettings):
         default = 0.7,
         description = "Threshold to filter out score"
     )
+    EXACT_FLAVOUR_PRECEDENCE: bool = Field(
+        default = False,
+        description="Sort providers putting them with exact flavour in front"
+    )
     CLASSIFICATION_WEIGHT: float = Field(
         default = 0.75,
         description = "Classification weight"
+    )
+    TEMPLATE_COMPLEX_TYPES :list =Field(
+        default=["INDIGO IAM as a Service","Elasticsearch and Kibana","Kubernates cluster", "Spark + Jupyter cluster","HTCondor mini", "HTCondor cluster", "Jupyter with persistence for Notebooks", "Jupyter + Matlab (with persistence for Notebooks)","Computational enviroment for Machine Learning INFN (ML_INFN)", "Working Station for CYGNO experiment", "Sync&Share aaS" ],
+        decription= "List of complex template"
     )
 
     class Config:
