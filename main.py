@@ -13,7 +13,7 @@ import numpy as np
 
 def processMessage(message : dict, input_list : list, template_complex_types : list):
     input_message={}
-    exact_flavours_dict={}
+    exact_flavors_dict={}
     message_providers=message["providers"]
     template_name=message["template_name"]
     complexity=0
@@ -49,9 +49,9 @@ def processMessage(message : dict, input_list : list, template_complex_types : l
                 'overbooking_cpu' : el["overbooking_cpu"],
                 'avg_deployment_time' : avg_deployment_time,
                 'failure_percentage' : failure_percentage}
-        exact_flavours_dict[provider]=(1.0-float(bool(el["n_instances_requ"] - el["exact_flavours"])))
+        exact_flavors_dict[provider]=(1.0-float(bool(el["n_instances_requ"] - el["exact_flavors"])))
         input_message[provider]=[calculated_values[key] for key in input_list if key in calculated_values]
-    return input_message, exact_flavours_dict
+    return input_message, exact_flavors_dict
 
 def classification_predict(inputData:dict, feature_input: list, model_name: str,  model_version: str ):
 
@@ -103,7 +103,7 @@ def regression_predict(inputData:dict, model_name: str,  model_version: str):
         raise RuntimeError(f"Error: {str(e)}")
 
 
-def process_inference(input_inference: dict, feature_input: list, exact_flavours_dict : dict, classification_model_name :str, classification_model_version:str, regression_model_name:str, regression_model_version:str, min_regression_time:int, max_regression_time:int, exact_flavour:bool, classification_weight: float =0.75, threshold: float = 0.7, filter_on: bool = False) -> dict:
+def process_inference(input_inference: dict, feature_input: list, exact_flavors_dict : dict, classification_model_name :str, classification_model_version:str, regression_model_name:str, regression_model_version:str, min_regression_time:int, max_regression_time:int, exact_flavour:bool, classification_weight: float =0.75, threshold: float = 0.7, filter_on: bool = False) -> dict:
     results = {}
     ##### DEFAULT VALUE
     default_value = 0.1
@@ -126,8 +126,8 @@ def process_inference(input_inference: dict, feature_input: list, exact_flavours
     #print(json.dumps(input_inference, indent=4))
     # Filter results based on the threshold
     if exact_flavour:
-        exact = [k for k in input_inference if exact_flavours_dict[k] == 1.0]
-        no_exact = [k for k in input_inference if exact_flavours_dict[k] == 0.0]
+        exact = [k for k in input_inference if exact_flavors_dict[k] == 1.0]
+        no_exact = [k for k in input_inference if exact_flavors_dict[k] == 0.0]
 
         exact_sorted = sorted(exact, key=lambda k: sorted_results[k], reverse=True)
         no_exact_sorted = sorted(no_exact, key=lambda k: sorted_results[k], reverse=True)
@@ -154,7 +154,7 @@ def get_features_input(model_name:str) -> list:
 
 def create_message(sorted_results: dict, deployment_uuis: str ) -> str:
     ranked_providers = [
-        {"provider_name": provider, "value": value} for provider, value in sorted_results.items()
+        {"provider_name": provider, "value": value} for provider, valu in sorted_results.items()
     ]
     message = {"uuid":deployment_uuid,"ranked_providers": ranked_providers}
     return json.dumps(message, indent=4)
@@ -213,9 +213,9 @@ if consumer.bootstrap_connected():
         deployment_uuid=message["uuid"]
         if len(message["providers"])!=1:
             try:
-                input_dict, exact_flavours_dict = processMessage(message, feature_input, template_complex_types)
+                input_dict, exact_flavors_dict = processMessage(message, feature_input, template_complex_types)
                 start_time = time.time()
-                sorted_results = process_inference(input_dict, feature_input, exact_flavours_dict, classification_model_name, classification_model_version, regression_model_name, regression_model_version ,min_regression_time=min_regression_time,max_regression_time=max_regression_time, exact_flavour=exact_flavour, classification_weight=classification_weight, threshold=threshold, filter_on=filter_mode)
+                sorted_results = process_inference(input_dict, feature_input, exact_flavors_dict, classification_model_name, classification_model_version, regression_model_name, regression_model_version ,min_regression_time=min_regression_time,max_regression_time=max_regression_time, exact_flavour=exact_flavour, classification_weight=classification_weight, threshold=threshold, filter_on=filter_mode)
                 end_time = time.time()
                 elapsed_time = end_time - start_time
                 print(f"Inference Time: {elapsed_time:.2f} seconds")
