@@ -3,8 +3,8 @@ import json
 
 with open("dump_messages.json", "r") as file:
     data = json.load(file)
-#for message in data:
-#   sender(message)
+for message in data:
+   sender(message)
 sender({
     "providers": [
         {
@@ -12,7 +12,7 @@ sender({
             "floating_ips_requ": 1.0,
             "floating_ips_usage": 45.0,
             "gpus_requ": 0.0,
-            "exact_flavours": 2.0,
+            "exact_flavors": 2.0,
             "images": 1.0,
             "n_instances_quota": 70.0,
             "n_instances_requ": 2.0,
@@ -42,7 +42,7 @@ sender({
             "floating_ips_requ": 1.0,
             "floating_ips_usage": 42.0,
             "gpus_requ": 0.0,
-            "exact_flavours": 1.0,
+            "exact_flavors": 1.0,
             "images": 1.0,
             "n_instances_quota": 100.0,
             "n_instances_requ": 2.0,
@@ -72,7 +72,7 @@ sender({
             "floating_ips_requ": 1.0,
             "floating_ips_usage": 0.0,
             "gpus_requ": 0.0,
-            "exact_flavours": 1.0,
+            "exact_flavors": 1.0,
             "images": 1.0,
             "n_instances_quota": 15.0,
             "n_instances_requ": 2.0,

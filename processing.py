@@ -3,7 +3,7 @@ import numpy as np
 from kafka import KafkaConsumer, TopicPartition
 import json
 
-def load_dataset_from_kafka(kafka_server_url:str, topic:str, partition: int, offset:int) -> pd.DataFrame:
+def load_dataset_from_kafka(kafka_server_url:str, topic:str, partition: int, offset:int):
 
     consumer = KafkaConsumer(
             #topic,
@@ -35,26 +35,32 @@ def preprocessing(df: pd.DataFrame, template_complex_types: list) -> pd.DataFram
     df["gpu"] = df["gpus_requ"].astype(bool).astype(float)
     mapStatus={"CREATE_COMPLETED":0, "CREATE_FAILED":1}
     df["status"]=df["status"].map(mapStatus).astype(int)
-    df["complexity"]=df["template_name"].isin(template_complex_types).astype(float)
+    df["complexity"]= df["template_name"].isin(template_complex_types).astype(float)
     df["deployment_time"] = np.where(df["completed_time"] != 0.0, df["completed_time"], df["tot_failed_time"]/df["n_failures"])
     df["provider"]=df["provider_name"] + "-" + df["region_name"]
     df["timestamp"] = pd.to_datetime(df["timestamp"])
 
     grouped = df.groupby(['provider', 'template_name'])
-    df = df.copy()
+    df = df.copy() # <-- perchè qua devi fare la copia?
     df['failure_percentage'] = df.apply(lambda row: calculate_failure_percentage(grouped.get_group((row['provider'], row['template_name'])), row), axis=1)
-    df['avg_deployment_time'] = df.apply(lambda row: calculate_avg_deployment_time(grouped.get_group((row['provider'], row['template_name'])), row), axis=1)
+    df['avg_success_time'] = df.apply(lambda row: calculate_avg_success_time(grouped.get_group((row['provider'], row['template_name'])), row), axis=1)
+    df['avg_failure_time'] = df.apply(lambda row: calculate_avg_failure_time(grouped.get_group((row['provider'], row['template_name'])), row), axis=1)
     return df
 
-def calculate_failure_percentage(group : pd.DataFrame,  row: pd.Series) -> float:
+def calculate_failure_percentage(group, row):
     mask = (group['timestamp'] <= row['timestamp']) & (group['timestamp'] > row['timestamp'] - pd.Timedelta(days=90))
     filtered_group = group[mask]
-    return filtered_group['status'].mean() if not filtered_group.empty else 0.0
+    return filtered_group['status'].mean() if not filtered_group.empty else None
 
-def calculate_avg_deployment_time(group : pd.DataFrame,  row: pd.Series) -> float:
-    mask = (group['timestamp'] <= row['timestamp']) & (group['timestamp'] > row['timestamp'] - pd.Timedelta(days=90))
+def calculate_avg_success_time(group, row):
+    mask = (group['timestamp'] <= row['timestamp']) & (group['timestamp'] > row['timestamp'] - pd.Timedelta(days=90)) & (group['status'] == 0)
     filtered_group = group[mask]
-    return filtered_group['deployment_time'].mean() if not filtered_group.empty else 0.0
+    return filtered_group['deployment_time'].mean() if not filtered_group.empty else None
+
+def calculate_avg_failure_time(group, row):
+    mask = (group['timestamp'] <= row['timestamp']) & (group['timestamp'] > row['timestamp'] - pd.Timedelta(days=90)) & (group['status'] == 1)
+    filtered_group = group[mask]
+    return filtered_group['deployment_time'].mean() if not filtered_group.empty else None
 
 
 

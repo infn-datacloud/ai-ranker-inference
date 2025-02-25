@@ -26,7 +26,11 @@ def processMessage(message : dict, input_list : list, template_complex_types : l
         provider=el["provider_name"]+"-"+el["region_name"]
         df_filtered = df[(df["template_name"].isin([template_name])) & (df["provider"].isin([provider]))]
         df_filtered = df_filtered.copy()
-        avg_deployment_time = ( float(df_filtered.loc[df_filtered["timestamp"].idxmax(), "avg_deployment_time"])
+        avg_success_time = ( float(df_filtered.loc[df_filtered["timestamp"].idxmax(), "avg_success_time"])
+                                if not df_filtered.empty
+                                else 0.0
+                                )
+        avg_failure_time = ( float(df_filtered.loc[df_filtered["timestamp"].idxmax(), "avg_failure_time"])
                                 if not df_filtered.empty
                                 else 0.0
                                 )
@@ -47,7 +51,8 @@ def processMessage(message : dict, input_list : list, template_complex_types : l
                 'complexity' : complexity,
                 'overbooking_ram' : el["overbooking_ram"],
                 'overbooking_cpu' : el["overbooking_cpu"],
-                'avg_deployment_time' : avg_deployment_time,
+                'avg_success_time' : avg_success_time,
+                'avg_failure_time' : avg_failure_time,
                 'failure_percentage' : failure_percentage}
         exact_flavors_dict[provider]=(1.0-float(bool(el["n_instances_requ"] - el["exact_flavors"])))
         input_message[provider]=[calculated_values[key] for key in input_list if key in calculated_values]
@@ -154,7 +159,7 @@ def get_features_input(model_name:str) -> list:
 
 def create_message(sorted_results: dict, deployment_uuis: str ) -> str:
     ranked_providers = [
-        {"provider_name": provider, "value": value} for provider, valu in sorted_results.items()
+        {"provider_name": provider, "value": value} for provider, value in sorted_results.items()
     ]
     message = {"uuid":deployment_uuid,"ranked_providers": ranked_providers}
     return json.dumps(message, indent=4)
